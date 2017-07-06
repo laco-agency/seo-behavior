@@ -1,19 +1,21 @@
 <?php
+/**
+ * @link http://laco.pro
+ * @copyright Copyright (c) Laco Digital Agency
+ * Date: 20.02.2017
+ */
+
 namespace laco\seo;
 
 use yii\base\Behavior;
 use yii\db\ActiveRecord;
 use yii\db\BaseActiveRecord;
-use common\components\modelUploader\UploadBehaviour;
-use common\components\modelUploader\storage\ModelStorage;
-use common\components\modelUploader\processor\ImageProcessor;
+use laco\uploader\UploaderBehavior;
+use laco\uploader\storage\ModelStorage;
+use laco\uploader\processor\ImageProcessor;
 
 /**
  * Class SeoModelBehavior
- *
- * @link http://laco.pro
- * @copyright Copyright (c) Laco Digital Agency
- * Date: 20.02.2017
  */
 class SeoModelBehavior extends Behavior
 {
@@ -30,10 +32,11 @@ class SeoModelBehavior extends Behavior
      * @var string Имя аттрибута и которого будет браться значение. false для отключения
      */
     public $titleFromAttribute = 'title';
+
     /**
      * @var string Имя аттрибута и которого будет браться значение. false для отключения
      */
-    public $descriptionFromAttribute = 'description';
+    public $descriptionFromAttribute = false;
 
     /**
      * @var string [Пока не работает!]Имя аттрибута и которого будет браться значение. false для отключения
@@ -54,7 +57,7 @@ class SeoModelBehavior extends Behavior
 
     public function afterInitOwner()
     {
-        /** @var ActiveRecord|UploadBehaviour $owner */
+        /** @var ActiveRecord|UploaderBehavior $owner */
         $owner = $this->owner;
 
         if ($this->hasUploadBehavior()) {
@@ -77,14 +80,14 @@ class SeoModelBehavior extends Behavior
 
     public function beforeValidate()
     {
-        /** @var ActiveRecord|UploadBehaviour $owner */
+        /** @var ActiveRecord|UploaderBehavior $owner */
         $owner = $this->owner;
 
-        if ($this->metaTitleAttribute && empty($owner->{$this->metaTitleAttribute})) {
+        if ($this->metaTitleAttribute && empty($owner->{$this->metaTitleAttribute}) && $this->titleFromAttribute) {
             $owner->{$this->metaTitleAttribute} = $owner->{$this->titleFromAttribute};
         }
 
-        if ($this->metaDescriptionAttribute && empty($owner->{$this->metaDescriptionAttribute})) {
+        if ($this->metaDescriptionAttribute && empty($owner->{$this->metaDescriptionAttribute}) && $this->descriptionFromAttribute) {
             $owner->{$this->metaDescriptionAttribute} = $owner->{$this->descriptionFromAttribute};
         }
     }
@@ -101,7 +104,7 @@ class SeoModelBehavior extends Behavior
 
     public function getMetaImage()
     {
-        /** @var ActiveRecord|UploadBehaviour $owner */
+        /** @var ActiveRecord|UploaderBehavior $owner */
         $owner = $this->owner;
 
         if (!empty($owner->{$this->metaImageAttribute})) {
@@ -126,7 +129,7 @@ class SeoModelBehavior extends Behavior
         $owner = $this->owner;
 
         foreach ($owner->getBehaviors() as $behavior) {
-            if ($behavior instanceof UploadBehaviour) {
+            if ($behavior instanceof UploaderBehavior) {
                 return true;
             }
         }
