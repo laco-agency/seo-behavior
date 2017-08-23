@@ -1,8 +1,10 @@
 <?php
+
 namespace laco\seo;
 
 use Yii;
 use yii\base\Behavior;
+use yii\db\ActiveRecord;
 
 /**
  * Class SeoControllerBehavior
@@ -14,7 +16,7 @@ use yii\base\Behavior;
 class SeoControllerBehavior extends Behavior
 {
     /**
-     * @param $data array|SeoModelBehavior
+     * @param $data array|ActiveRecord with SeoModelBehavior
      *
      * Array format:
      * [
@@ -25,7 +27,7 @@ class SeoControllerBehavior extends Behavior
      */
     public function setMetaTags($data)
     {
-        if ($data instanceof SeoModelBehavior) {
+        if ($this->hasUploadBehavior($data)) {
             $data = [
                 'metaTitle' => $data->getMetaTitle(),
                 'metaDescription' => $data->getMetaDescription(),
@@ -64,5 +66,19 @@ class SeoControllerBehavior extends Behavior
             'name' => 'og:url',
             'content' => Yii::$app->request->getAbsoluteUrl(),
         ]);
+    }
+
+    protected function hasUploadBehavior($data)
+    {
+        if (!($data instanceof ActiveRecord)) {
+            return false;
+        }
+        foreach ($data->getBehaviors() as $behavior) {
+            if ($behavior instanceof SeoModelBehavior) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

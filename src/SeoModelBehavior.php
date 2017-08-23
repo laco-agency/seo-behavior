@@ -10,8 +10,9 @@ namespace laco\seo;
 use yii\base\Behavior;
 use yii\db\ActiveRecord;
 use yii\db\BaseActiveRecord;
-use laco\uploader\UploaderBehavior;
+use laco\uploader\behaviors\UploadBehavior;
 use laco\uploader\storage\ModelStorage;
+use laco\uploader\storageFile\StorageFile;
 use laco\uploader\processor\ImageProcessor;
 
 /**
@@ -22,12 +23,7 @@ class SeoModelBehavior extends Behavior
     public $metaTitleAttribute = 'meta_title';
     public $metaDescriptionAttribute = 'meta_description';
     public $metaImageAttribute = 'meta_image';
-
-    public $imageUploaderOptions = [
-        'origin' => ['width' => 540, 'height' => 240, 'crop' => true],
-        'thumb' => ['width' => 165, 'height' => 218, 'crop' => true],
-    ];
-
+    public $imageUploaderOptions;
     /**
      * @var string Имя аттрибута и которого будет браться значение. false для отключения
      */
@@ -43,6 +39,31 @@ class SeoModelBehavior extends Behavior
      */
     public $imageFromAttribute = false;
 
+    public function init()
+    {
+        parent::init();
+        if ($this->imageUploaderOptions === null) {
+            $this->imageUploaderOptions = [
+                'class' => StorageFile::className(),
+                'storage' => ModelStorage::className(),
+                'processOptions' => [
+                    'origin' => [
+                        'class' => ImageProcessor::className(),
+                        'width' => 540,
+                        'height' => 240,
+                        'crop' => true
+                    ],
+                    'thumb' => [
+                        'class' => ImageProcessor::className(),
+                        'width' => 165,
+                        'height' => 218,
+                        'crop' => true
+                    ],
+                ]
+            ];
+        }
+    }
+
     /**
      * Declares events and the corresponding event handler methods.
      * @return array events (array keys) and the corresponding event handler methods (array values).
@@ -57,21 +78,13 @@ class SeoModelBehavior extends Behavior
 
     public function afterInitOwner()
     {
-        /** @var ActiveRecord|UploaderBehavior $owner */
+        /** @var ActiveRecord|UploadBehavior $owner */
         $owner = $this->owner;
 
         if ($this->hasUploadBehavior()) {
             $owner->uploadAttributes = array_merge(
                 [
-                    $this->metaImageAttribute => [
-                        'storage' => [
-                            'class' => ModelStorage::className(),
-                            'processor' => [
-                                'class' => ImageProcessor::className(),
-                                'options' => $this->imageUploaderOptions
-                            ]
-                        ]
-                    ]
+                    $this->metaImageAttribute => $this->imageUploaderOptions
                 ],
                 $owner->uploadAttributes
             );
@@ -80,7 +93,7 @@ class SeoModelBehavior extends Behavior
 
     public function beforeValidate()
     {
-        /** @var ActiveRecord|UploaderBehavior $owner */
+        /** @var ActiveRecord|UploadBehavior $owner */
         $owner = $this->owner;
 
         if ($this->metaTitleAttribute && empty($owner->{$this->metaTitleAttribute}) && $this->titleFromAttribute) {
@@ -104,7 +117,7 @@ class SeoModelBehavior extends Behavior
 
     public function getMetaImage()
     {
-        /** @var ActiveRecord|UploaderBehavior $owner */
+        /** @var ActiveRecord|UploadBehavior $owner */
         $owner = $this->owner;
 
         if (!empty($owner->{$this->metaImageAttribute})) {
@@ -129,7 +142,7 @@ class SeoModelBehavior extends Behavior
         $owner = $this->owner;
 
         foreach ($owner->getBehaviors() as $behavior) {
-            if ($behavior instanceof UploaderBehavior) {
+            if ($behavior instanceof UploadBehavior) {
                 return true;
             }
         }
