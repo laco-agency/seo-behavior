@@ -51,19 +51,19 @@ class SeoControllerBehavior extends Behavior
         ]);
 
         Yii::$app->view->registerMetaTag([
-            'name' => 'og:title',
+            'property' => 'og:title',
             'content' => $data['metaTitle'],
         ]);
         Yii::$app->view->registerMetaTag([
-            'name' => 'og:description',
+            'property' => 'og:description',
             'content' => $data['metaDescription'],
         ]);
         Yii::$app->view->registerMetaTag([
-            'name' => 'og:image',
+            'property' => 'og:image',
             'content' => $data['metaImage'],
         ]);
         Yii::$app->view->registerMetaTag([
-            'name' => 'og:url',
+            'property' => 'og:url',
             'content' => Yii::$app->request->getAbsoluteUrl(),
         ]);
     }
